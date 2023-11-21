@@ -18,11 +18,25 @@ type QRData struct {
 }
 
 func GenerateQR(c *fiber.Ctx) error {
-	now := time.Now()
-	qrData := &QRData{}
+
+	qrData := &[]QRData{}
 	c.BodyParser(qrData)
-	qrCode, _ := qrcode.New(qrData.Fullname, qrcode.Highest)
-	fileName := fmt.Sprintf("./qr/%v.png", now.UnixMilli())
+
+	for _, v := range *qrData {
+		fmt.Println("Name:", v.Fullname)
+		GenerateQRCode(v.Fullname)
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "success",
+		"data":    qrData,
+	})
+}
+
+func GenerateQRCode(name string) error {
+	now := time.Now()
+	qrCode, _ := qrcode.New(name, qrcode.Highest)
+	fileName := fmt.Sprintf("./codes/%v.png", now.UnixMilli())
 
 	err := qrCode.WriteFile(256, fileName)
 
@@ -31,10 +45,7 @@ func GenerateQR(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.JSON(fiber.Map{
-		"message": "success",
-		"data":    qrCode,
-	})
+	return nil
 }
 
 func GenerateQRWithLogo(c *fiber.Ctx) error {
