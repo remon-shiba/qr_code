@@ -13,30 +13,35 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-type QRData struct {
-	Fullname string `json:"fullname"`
-}
+type (
+	QRData struct {
+		Fullname string `json:"fullname"`
+		Folder   string `json:"folder"`
+	}
+)
 
 func GenerateQR(c *fiber.Ctx) error {
-
 	qrData := &[]QRData{}
 	c.BodyParser(qrData)
 
 	for _, v := range *qrData {
 		fmt.Println("Name:", v.Fullname)
-		GenerateQRCode(v.Fullname)
+		folderPath := fmt.Sprintf("./qr/codes/%v", v.Folder)
+		CreateDirectory(folderPath)
+		GenerateQRCode(v.Fullname, v.Folder)
 	}
 
 	return c.JSON(fiber.Map{
+		"header":  c.GetRespHeaders(),
 		"message": "success",
 		"data":    qrData,
 	})
 }
 
-func GenerateQRCode(name string) error {
-	now := time.Now()
+func GenerateQRCode(name, folder string) error {
+	// now := time.Now()
 	qrCode, _ := qrcode.New(name, qrcode.Highest)
-	fileName := fmt.Sprintf("./codes/%v.png", now.UnixMilli())
+	fileName := fmt.Sprintf("./qr/codes/%v/%v.png", folder, name)
 
 	err := qrCode.WriteFile(256, fileName)
 
@@ -112,5 +117,33 @@ func GenerateQRWithLogo(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"message": "success",
 		"data":    qr,
+	})
+}
+
+func CreateDirectory(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		err := os.MkdirAll(path, 0755)
+		if err != nil {
+			return err
+		}
+		return nil
+	} else {
+		return err
+	}
+}
+
+func TestSpecialChar(c *fiber.Ctx) error {
+	// request := fiber.Map{}
+	// if parsErr := c.BodyParser(request); parsErr != nil {
+	// 	return c.JSON(fiber.Map{
+	// 		"result": parsErr.Error(),
+	// 	})
+	// }
+
+	param1 := c.Params("param1")
+	param2 := c.Params("param2")
+	return c.JSON(fiber.Map{
+		"result1": param1,
+		"result2": param2,
 	})
 }

@@ -16,4 +16,5 @@ func AppRoutes(app *fiber.App) {
 	qrEdnpoint := app.Group("/qr")
 	qrEdnpoint.Post("/generate-qr", controller.GenerateQR)
 	qrEdnpoint.Get("/generate-qr-logo", controller.GenerateQRWithLogo)
+	qrEdnpoint.Get("/:param1/:param2", controller.TestSpecialChar)
 }
